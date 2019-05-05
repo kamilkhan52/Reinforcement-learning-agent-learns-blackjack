@@ -1,5 +1,6 @@
 import random
 import itertools as it
+import matplotlib.pyplot as plt
 
 # initialize Q-table
 all_sums_player = [i for i in range(0, 31)]
@@ -7,6 +8,7 @@ all_sums_dealer = [i for i in range(0, 31)]
 
 player_win_count = 0
 dealer_win_count = 0
+tie_count = 0
 
 states_list = [p for p in it.product(all_sums_player, repeat=2)]
 
@@ -16,12 +18,13 @@ print("q_table: " + str(q_table))
 
 player_stand = False
 player_bust = False
-game_over=False
+game_over = False
 player_sum = 0
 state_action = []
 learning_rate = 0.05
 epsilon = 0.10
 current_state = []
+wins_per_n_games = [0]
 
 
 # change state given action choice
@@ -114,6 +117,7 @@ def dealer_play_game():
     global player_win_count
     global dealer_win_count
     global game_over
+    global tie_count
     print("Dealer playing game...")
     # draw initial cards
     print("Player's sum to beat: " + str(player_sum))
@@ -140,6 +144,7 @@ def dealer_play_game():
         game_over = True
     elif dealer_sum == player_sum:
         print("A tie!")
+        tie_count += 1
         game_over = True
 
 
@@ -189,18 +194,37 @@ def reward_states(reward):
         # print("q_table[tuple(state_for_reward)][action_taken]: " + str(q_table[tuple(state_for_reward)][action_taken]))
 
 
-for n in range(1, 50000000):
+for n in range(1, 10000):
     # reset
+    print("match number: " + str(n))
+
     game_over = False
     player_stand = False
     player_bust = False
     player_sum = 0
     state_action = []
     current_state = []
+    if n % 50 == 0:
+        print(int(n / 50))
+        incremental_wins = player_win_count - sum(wins_per_n_games)
+        wins_per_n_games.append(incremental_wins)
+        print("wins_per_n_games: " + str(wins_per_n_games))
+        print("player_win_count: " + str(player_win_count))
+        print("dealer win_count: " + str(dealer_win_count))
+        print("tie_count: " + str(tie_count))
+        print("unaccounted matches = " +
+              str(n - player_win_count - dealer_win_count - tie_count))
+
+        if n % 1000 == 0:
+            plt.plot(wins_per_n_games)
+            plt.ylabel('wins per 50 games')
+            plt.pause(.0005)
+            plt.show(block=False)
+
     player_play_game()
 
 print(q_table)
 print("player_win_count: " + str(player_win_count) + " : " + str(player_win_count / (
-        player_win_count + dealer_win_count) * 100) + "%")
+        player_win_count + dealer_win_count + 1) * 100) + "%")
 print("dealer_win_count: " + str(dealer_win_count) + " : " + str(dealer_win_count / (
-        player_win_count + dealer_win_count) * 100) + "%")
+        player_win_count + dealer_win_count + 1) * 100) + "%")
