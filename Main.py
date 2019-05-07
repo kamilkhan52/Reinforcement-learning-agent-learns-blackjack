@@ -8,8 +8,8 @@ print(
     "The program uses matplotlib to plot player win percentage (green) vs player average sum at standing (blue). The x-axis is number_of_games/100. Total runtime is around 2 mins, wiith 50000 matches")
 
 # initialize Q-table
-bust_limit = 21
-dealer_hit_limit = bust_limit - 4
+bust_limit = 50
+dealer_hit_limit = bust_limit - 10
 
 all_sums_player = [i for i in range(0, bust_limit + 10)]
 all_sums_dealer = [i for i in range(0, bust_limit + 10)]
@@ -31,7 +31,7 @@ player_bust = False
 game_over = False
 player_sum = 0
 state_action = []
-learning_rate = 0.05
+learning_rate = 0.3
 epsilon = 90
 current_state = []
 wins_per_n_games = [0]
@@ -154,7 +154,6 @@ def dealer_play_game():
         reward_states(1)
         game_over = True
     elif dealer_sum == player_sum:
-        reward_states(0)
         tie_count += 1
         game_over = True
 
@@ -178,7 +177,7 @@ def reward_states(reward):
         # update the q-value
         if next_state_exists:
             new_q_value = q_table[tuple(state_for_reward)][action_taken] + learning_rate * (
-                    reward + max(q_table[tuple(next_state)]))
+                    reward + (max(q_table[tuple(next_state)]) - q_table[tuple(state_for_reward)][action_taken]))
         else:
             new_q_value = q_table[tuple(state_for_reward)][action_taken] + learning_rate * (
                 reward)
@@ -205,6 +204,7 @@ for n in range(1, 50000):
         epsilon = epsilon * 1.0005
 
         # player_sum trend
+        del player_sum_series[:-1000]
         last_few_games_sum_avg = statistics.mean(player_sum_series[-1000:])
         player_sum_series_avg.append(last_few_games_sum_avg)
         plt.figure(1)
